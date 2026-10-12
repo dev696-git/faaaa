@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Chronos Luxe — World Clock, Alarm, Stopwatch & Device Emulator</title>
+  <meta name="description" content="A state-of-the-art clock application featuring World Clock, multi-alarms, high-precision stopwatch, Pomodoro timer, and sleep cycle sounds inside a built-in device emulator.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#111827">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏱️</text></svg>">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+    }
+  </script>
+</head>
+<body data-theme="midnight">
+
+  <!-- ======================================================================
+       WORKSPACE EMULATOR CONTROLLER BAR
+       ====================================================================== -->
+  <header class="emulator-toolbar" id="emulatorToolbar">
+    <div class="toolbar-brand">
+      <div class="brand-icon">⏱️</div>
+      <div>
+        <div class="brand-title">CHRONOS EMULATOR</div>
+      </div>
+      <span class="brand-badge">PRO v2.4</span>
+    </div>
+
+    <div class="toolbar-controls">
+      <!-- Device Chassis Switcher -->
+      <div class="device-picker" id="devicePicker" role="group" aria-label="Device Chassis">
+        <button class="device-btn active" data-device="iphone" id="btnDeviceIphone" title="iPhone 16 Pro Frame">
+          <span>📱</span> iPhone
+        </button>
+        <button class="device-btn" data-device="pixel" id="btnDevicePixel" title="Google Pixel Frame">
+          <span>🤖</span> Pixel
+        </button>
+        <button class="device-btn" data-device="watch" id="btnDeviceWatch" title="Smartwatch Mode">
+          <span>⌚</span> Watch
+        </button>
+        <button class="device-btn" data-device="fullscreen" id="btnDeviceFullscreen" title="Fullscreen Desktop View">
+          <span>💻</span> Desktop
+        </button>
+      </div>
+
+      <!-- Orientation & Sound Tools -->
+      <button class="tool-action-btn" id="btnRotateDevice" title="Rotate Orientation">
+        <span>🔄</span> Rotate
+      </button>
+
+      <button class="tool-action-btn" id="btnSoundToggle" title="Audio Synthesizer Mute/Unmute">
+        <span id="soundIcon">🔊</span> Audio
+      </button>
+
+      <!-- Theme Switcher -->
+      <select class="theme-dropdown" id="themeSelect" aria-label="Theme Select">
+        <option value="midnight">🌙 Midnight Titanium</option>
+        <option value="cyberpunk">⚡ Cyberpunk Neon</option>
+        <option value="gold">👑 Obsidian Gold</option>
+        <option value="frost">❄️ Frost Glass</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- ======================================================================
+       DEVICE EMULATOR STAGE & HARDWARE CHASSIS
+       ====================================================================== -->
+  <main class="emulator-stage" id="emulatorStage">
+    <div class="device-shell mode-iphone" id="deviceShell">
+      
+      <!-- Hardware details -->
+      <div class="device-speaker" aria-hidden="true"></div>
+      
+      <!-- Dynamic Island with Live Pulse and Status -->
+      <div class="dynamic-island" id="dynamicIsland" title="Click to expand Dynamic Island">
+        <div class="island-camera"></div>
+        <div class="island-content">
+          <span class="island-pulse"></span>
+          <span id="islandStatusText">CHRONOS</span>
+        </div>
+      </div>
+
+      <!-- Device Status Bar -->
+      <div class="status-bar" id="deviceStatusBar">
+        <div class="status-left" id="statusClock">09:41</div>
+        <div class="status-right">
+          <span class="status-icon" title="5G Ultra Wideband">5G</span>
+          <span class="status-icon" title="Full Wi-Fi Signal">📶</span>
+          <div class="battery-pill" title="Battery 98%">
+            <span>98%</span>
+            <div class="battery-box"><div class="battery-fill"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- App Viewport -->
+      <div class="app-viewport" id="appViewport">
+        <div class="screens-container" id="screensContainer">
+
+          <!-- ==========================================================
+               SCREEN 1: CLOCK & WORLD CLOCK
+               ========================================================== -->
+          <section class="app-screen active" id="screen-clock" aria-label="Clock View">
+            <div class="screen-header">
+              <h1 class="screen-title">Clock</h1>
+              <button class="screen-action-btn" id="btnAddCityBtn" title="Add World Clock City">+</button>
+            </div>
+
+            <!-- View Toggle: Analog / Digital -->
+            <div class="clock-view-toggle">
+              <div class="pill-toggle-group">
+                <button class="pill-toggle-btn active" id="toggleAnalogBtn">Analog Luxe</button>
+                <button class="pill-toggle-btn" id="toggleDigitalBtn">Digital OLED</button>
+              </div>
+            </div>
+
+            <!-- Analog Clock Dial -->
+            <div class="analog-clock-wrapper" id="analogClockWrap">
+              <div class="analog-dial" id="analogDial">
+                <div class="dial-face" id="dialTicks">
+                  <!-- Generated by JS: 12 ticks and numbers -->
+                </div>
+                <div class="dial-complication" id="dialDateComplication">OCT 13</div>
+                <div class="hand-wrapper">
+                  <div class="hand hour-hand" id="hourHand"></div>
+                  <div class="hand minute-hand" id="minuteHand"></div>
+                  <div class="hand second-hand" id="secondHand"></div>
+                  <div class="center-pin"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Digital Clock Display Card -->
+            <div class="digital-clock-card" id="digitalClockCard">
+              <div class="digital-time">
+                <span id="digHours">03</span>:<span id="digMinutes">06</span>
+                <span class="digital-seconds" id="digSeconds">45</span>
+                <span class="digital-period" id="digPeriod">AM</span>
+              </div>
+              <div class="digital-date" id="digDateString">
+                <span>Tuesday, October 13</span>
+              </div>
+              <div class="location-badge" id="localTimezoneBadge">
+                <span>📍 Local Time (IST / UTC+5:30)</span>
+              </div>
+            </div>
+
+            <!-- World Clock Section -->
+            <div class="world-clock-section">
+              <div class="section-header">
+                <h2 class="section-title">World Cities</h2>
+                <span style="font-size: 11px; color: var(--text-muted);">Live Sync</span>
+              </div>
+              <div class="world-clock-list" id="worldClockList">
+                <!-- Dynamically populated world cities -->
+              </div>
+            </div>
+          </section>
+
+          <!-- ==========================================================
+               SCREEN 2: ALARM
+               ========================================================== -->
+          <section class="app-screen" id="screen-alarm" aria-label="Alarm View">
+            <div class="screen-header">
+              <h1 class="screen-title">Alarms</h1>
+              <button class="screen-action-btn" id="btnOpenNewAlarm" title="New Alarm">+</button>
+            </div>
+
+            <div class="next-alarm-banner" id="nextAlarmBanner">
+              <div class="banner-icon">🔔</div>
+              <div class="banner-text">
+                <h5>Next Scheduled Alarm</h5>
+                <p id="nextAlarmCountdown">In 4 hours 15 minutes</p>
+              </div>
+            </div>
+
+            <div class="alarm-list" id="alarmListContainer">
+              <!-- Dynamically populated alarm cards -->
+            </div>
+          </section>
+
+          <!-- ==========================================================
+               SCREEN 3: STOPWATCH
+               ========================================================== -->
+          <section class="app-screen" id="screen-stopwatch" aria-label="Stopwatch View">
+            <div class="screen-header">
+              <h1 class="screen-title">Stopwatch</h1>
+            </div>
+
+            <div class="stopwatch-container">
+              <div class="stopwatch-dial-wrap">
+                <svg class="stopwatch-ring-svg" viewBox="0 0 240 240">
+                  <circle class="stopwatch-ring-track" cx="120" cy="120" r="110"></circle>
+                  <circle class="stopwatch-ring-progress" id="stopwatchProgressRing" cx="120" cy="120" r="110"></circle>
+                </svg>
+                <div class="stopwatch-display">
+                  <span id="swMinutes">00</span>:<span id="swSeconds">00</span>.<span class="stopwatch-ms" id="swMs">00</span>
+                </div>
+                <div class="stopwatch-lap-preview" id="swCurrentLapPreview">Lap 1 · 00:00.00</div>
+              </div>
+
+              <!-- Controls -->
+              <div class="chrono-controls">
+                <button class="chrono-btn btn-lap-reset" id="btnLapReset" disabled>Lap</button>
+                <button class="chrono-btn btn-start-pause" id="btnStartStop">Start</button>
+              </div>
+
+              <!-- Lap Times Table -->
+              <div class="lap-list-wrap" id="lapListWrap">
+                <!-- Lap rows rendered here -->
+              </div>
+            </div>
+          </section>
+
+          <!-- ==========================================================
+               SCREEN 4: TIMER
+               ========================================================== -->
+          <section class="app-screen" id="screen-timer" aria-label="Timer View">
+            <div class="screen-header">
+              <h1 class="screen-title">Timer</h1>
+            </div>
+
+            <div class="timer-container">
+              <div class="timer-ring-container">
+                <svg class="timer-svg" viewBox="0 0 240 240">
+                  <defs>
+                    <linearGradient id="timerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="var(--accent-cyan)"></stop>
+                      <stop offset="100%" stop-color="var(--accent-purple)"></stop>
+                    </linearGradient>
+                  </defs>
+                  <circle class="timer-track" cx="120" cy="120" r="110"></circle>
+                  <circle class="timer-progress" id="timerProgressRing" cx="120" cy="120" r="110"></circle>
+                </svg>
+                <div class="timer-countdown-display">
+                  <div class="timer-time-text" id="timerDisplay">05:00</div>
+                  <span class="timer-status-badge" id="timerStatusBadge">Ready</span>
+                </div>
+              </div>
+
+              <!-- Custom Picker Inputs (Visible when idle) -->
+              <div class="timer-picker-wrap" id="timerPickerWrap">
+                <div class="picker-col">
+                  <input type="number" min="0" max="23" value="00" class="picker-input" id="inputTimerHours" aria-label="Hours">
+                  <span class="picker-label">Hours</span>
+                </div>
+                <span class="picker-colon">:</span>
+                <div class="picker-col">
+                  <input type="number" min="0" max="59" value="05" class="picker-input" id="inputTimerMinutes" aria-label="Minutes">
+                  <span class="picker-label">Min</span>
+                </div>
+                <span class="picker-colon">:</span>
+                <div class="picker-col">
+                  <input type="number" min="0" max="59" value="00" class="picker-input" id="inputTimerSeconds" aria-label="Seconds">
+                  <span class="picker-label">Sec</span>
+                </div>
+              </div>
+
+              <!-- Quick Presets -->
+              <div class="timer-presets" id="timerPresets">
+                <button class="preset-chip" data-seconds="60">1 min</button>
+                <button class="preset-chip" data-seconds="300">5 min</button>
+                <button class="preset-chip" data-seconds="600">10 min</button>
+                <button class="preset-chip" data-seconds="900">15 min</button>
+                <button class="preset-chip" data-seconds="1500">25m Focus</button>
+                <button class="preset-chip" data-seconds="2700">45m Deep</button>
+              </div>
+
+              <!-- Action Controls -->
+              <div class="timer-btn-row">
+                <button class="timer-action-btn btn-cancel-timer" id="btnTimerCancel" disabled>Cancel</button>
+                <button class="timer-action-btn btn-start-timer" id="btnTimerStart">Start Timer</button>
+                <button class="timer-action-btn btn-cancel-timer" id="btnTimerAddMinute" style="display: none;">+1 Min</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- ==========================================================
+               SCREEN 5: SLEEP & SOUNDS
+               ========================================================== -->
+          <section class="app-screen" id="screen-sleep" aria-label="Sleep & Ambient Sounds">
+            <div class="screen-header">
+              <h1 class="screen-title">Sleep & Ambient</h1>
+            </div>
+
+            <!-- Sleep Cycle Calculator -->
+            <div class="sleep-calculator-card">
+              <div class="sleep-calc-title">
+                <span>🌙</span> 90-Minute Sleep Cycles
+              </div>
+              <p class="sleep-calc-desc">Waking up in-between 90-minute sleep cycles leaves you refreshed instead of groggy. If you go to sleep now, wake up at:</p>
+              
+              <div class="cycle-grid" id="cycleGrid">
+                <!-- Dynamically generated optimal wake up times -->
+              </div>
+            </div>
+
+            <!-- Ambient Sound Generator -->
+            <div class="sound-machine-card">
+              <div class="sleep-calc-title">
+                <span>🎧</span> Web Audio Sleep Machine
+              </div>
+              <p class="sleep-calc-desc">Pure synthesized soundscapes to help you focus or fall asleep.</p>
+
+              <div class="sound-chips" id="soundChips">
+                <button class="sound-chip active" data-sound="rain">🌧️ Soft Rain</button>
+                <button class="sound-chip" data-sound="brown">🌊 Brown Noise</button>
+                <button class="sound-chip" data-sound="white">📻 White Noise</button>
+                <button class="sound-chip" data-sound="zen">🧘 Zen Resonance</button>
+              </div>
+
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 14px;">
+                <button class="timer-action-btn btn-start-timer" id="btnToggleSoundMachine" style="padding: 10px 22px;">
+                  <span id="soundPlayIcon">▶</span> <span id="soundPlayText">Play Soundscape</span>
+                </button>
+                <div class="audio-bars-viz" id="audioBarsViz">
+                  <div class="audio-bar"></div>
+                  <div class="audio-bar"></div>
+                  <div class="audio-bar"></div>
+                  <div class="audio-bar"></div>
+                  <div class="audio-bar"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- ==========================================================
+             BOTTOM NAVIGATION BAR
+             ========================================================== -->
+        <nav class="app-nav" id="appNav" aria-label="App Navigation">
+          <button class="nav-item active" data-target="screen-clock" id="navClock">
+            <span class="nav-icon">🕒</span>
+            <span class="nav-label">Clock</span>
+          </button>
+          <button class="nav-item" data-target="screen-alarm" id="navAlarm">
+            <span class="nav-icon">⏰</span>
+            <span class="nav-label">Alarms</span>
+          </button>
+          <button class="nav-item" data-target="screen-stopwatch" id="navStopwatch">
+            <span class="nav-icon">⏱️</span>
+            <span class="nav-label">Stopwatch</span>
+          </button>
+          <button class="nav-item" data-target="screen-timer" id="navTimer">
+            <span class="nav-icon">⏳</span>
+            <span class="nav-label">Timer</span>
+          </button>
+          <button class="nav-item" data-target="screen-sleep" id="navSleep">
+            <span class="nav-icon">🌙</span>
+            <span class="nav-label">Sleep</span>
+          </button>
+        </nav>
+
+        <!-- Hardware Home Bar Indicator -->
+        <div class="home-indicator" aria-hidden="true"></div>
+      </div>
+
+      <!-- ==========================================================
+           MODALS & OVERLAYS
+           ========================================================== -->
+
+      <!-- Add Alarm Modal -->
+      <div class="modal-overlay" id="addAlarmModal">
+        <div class="modal-sheet">
+          <div class="modal-header">
+            <h3 class="modal-title">New Alarm</h3>
+            <button class="modal-close-btn" id="btnCloseAlarmModal">✕</button>
+          </div>
+          <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px;">
+            <input type="number" id="alarmInputHours" min="0" max="23" value="07" class="picker-input" style="width: 70px; font-size: 28px;">
+            <span class="picker-colon" style="font-size: 28px;">:</span>
+            <input type="number" id="alarmInputMins" min="0" max="59" value="30" class="picker-input" style="width: 70px; font-size: 28px;">
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">Alarm Label</label>
+            <input type="text" id="alarmInputLabel" value="Morning Motivation" style="width: 100%; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 10px 14px; color: #fff; font-size: 14px; outline: none;">
+          </div>
+          <div style="margin-bottom: 24px;">
+            <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">Alarm Sound Tone</label>
+            <select id="alarmToneSelect" class="theme-dropdown" style="width: 100%; padding: 10px;">
+              <option value="radar">📡 Digital Radar Chime</option>
+              <option value="zen">🔔 Zen Bell Resonance</option>
+              <option value="pulse">⚡ Cyber Electronic Pulse</option>
+            </select>
+          </div>
+          <button class="timer-action-btn btn-start-timer" id="btnSaveAlarm" style="width: 100%; justify-content: center;">Save Alarm</button>
+        </div>
+      </div>
+
+      <!-- Add City Modal -->
+      <div class="modal-overlay" id="addCityModal">
+        <div class="modal-sheet">
+          <div class="modal-header">
+            <h3 class="modal-title">Add World Clock</h3>
+            <button class="modal-close-btn" id="btnCloseCityModal">✕</button>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px; max-height: 280px; overflow-y: auto;" id="availableCitiesList">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Ringing Alarm Overlay Alert -->
+      <div class="alarm-ring-overlay" id="alarmRingOverlay">
+        <div class="ring-bell-icon">🔔</div>
+        <h2 style="font-size: 28px; font-weight: 800; margin-bottom: 6px; color: #fff;" id="ringingAlarmLabel">Morning Motivation</h2>
+        <p style="font-size: 16px; color: var(--accent-rose); font-family: var(--font-mono); margin-bottom: 30px;" id="ringingAlarmTime">07:30 AM</p>
+        <div style="display: flex; gap: 16px; width: 100%; max-width: 280px;">
+          <button class="timer-action-btn btn-cancel-timer" id="btnAlarmSnooze" style="flex: 1; justify-content: center;">Snooze (5m)</button>
+          <button class="timer-action-btn btn-start-timer" id="btnAlarmDismiss" style="flex: 1; justify-content: center; background: var(--accent-rose); box-shadow: 0 4px 18px rgba(244, 63, 94, 0.4);">Dismiss</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
